@@ -12,8 +12,8 @@ UTC7 = timezone(timedelta(hours=7))
 def init_data():
     return pd.DataFrame({
         "character": [
-            "Cleric", "Chanter", "Templar", "Gladiator",
-            "Ranger", "Sorcerer", "Assassin", "Elementalist"
+            "Buff", "Thương", "Kiếm khiên", "Đại kiếm",
+            "Cung", "Sách", "Sát thủ", "Cầu"
         ],
         "nightmare": [0]*8,
         "trial": [0]*8,

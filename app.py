@@ -18,10 +18,6 @@ def load_data():
     res = supabase.table("energy_tracker").select("*").execute()
     df = pd.DataFrame(res.data)
 
-    if df.empty:
-        st.error("❌ Không có dữ liệu trong Supabase")
-        return pd.DataFrame()
-
     df["last_update"] = pd.to_datetime(df["last_update"], utc=True).dt.tz_convert(UTC7)
     return df
 
@@ -34,7 +30,7 @@ def save_row(row):
         "last_update": row["last_update"].isoformat()
     }).eq("id", int(row["id"])).execute()
 
-# ================= ENERGY =================
+# ================= TIME =================
 def get_block_time(dt):
     if dt.tzinfo is None:
         dt = dt.tz_localize(UTC7)
@@ -44,6 +40,7 @@ def get_block_time(dt):
     hour_block = (dt.hour // 3) * 3
     return dt.replace(hour=hour_block, minute=0, second=0, microsecond=0)
 
+# ================= ENERGY =================
 def update_energy(df):
     now = pd.Timestamp.now(tz=UTC7)
     now_block = get_block_time(now)
@@ -60,19 +57,80 @@ def update_energy(df):
 
     return df
 
+# ================= ALERT =================
+def check_alert(df):
+    full_energy = df[df["energy"] >= MAX_ENERGY]["character"].tolist()
+    warn_energy = df[(df["energy"] >= MAX_ENERGY*0.8) & (df["energy"] < MAX_ENERGY)]["character"].tolist()
+
+    full_nightmare = df[df["nightmare"] >= MAX_NIGHTMARE]["character"].tolist()
+    warn_nightmare = df[(df["nightmare"] >= MAX_NIGHTMARE*0.8) & (df["nightmare"] < MAX_NIGHTMARE)]["character"].tolist()
+
+    return full_energy, warn_energy, full_nightmare, warn_nightmare
+
+# ================= HIGHLIGHT =================
+def highlight_status(df):
+    def color_energy(val):
+        if val >= MAX_ENERGY:
+            return "background-color: red; color: white"
+        elif val >= MAX_ENERGY * 0.8:
+            return "background-color: yellow"
+        return ""
+
+    def color_nightmare(val):
+        if val >= MAX_NIGHTMARE:
+            return "background-color: red; color: white"
+        elif val >= MAX_NIGHTMARE * 0.8:
+            return "background-color: yellow"
+        return ""
+
+    style = pd.DataFrame("", index=df.index, columns=df.columns)
+    style["energy"] = df["energy"].apply(color_energy)
+    style["nightmare"] = df["nightmare"].apply(color_nightmare)
+
+    return style
+
 # ================= INIT =================
 if "df" not in st.session_state:
     st.session_state.df = load_data()
 
 # ================= APP =================
-st.title("⚡ Energy Tracker (Supabase)")
+st.set_page_config(page_title="Energy Tracker PRO", layout="wide")
+st.title("⚡ Energy Tracker PRO (Supabase)")
 
-# update energy mỗi lần load
+# update energy
 st.session_state.df = update_energy(st.session_state.df)
 
-st.dataframe(st.session_state.df, use_container_width=True)
+# ================= ALERT =================
+full_e, warn_e, full_n, warn_n = check_alert(st.session_state.df)
+
+if full_e or full_n:
+    st.error("🔥 Có nhân vật FULL!")
+
+if warn_e or warn_n:
+    st.warning("⚠️ Sắp đầy (>=80%)")
+
+if full_e:
+    st.error(f"⚡ Full Energy: {', '.join(full_e)}")
+
+if warn_e:
+    st.warning(f"⚡ Energy 80%+: {', '.join(warn_e)}")
+
+if full_n:
+    st.error(f"💀 Full Nightmare: {', '.join(full_n)}")
+
+if warn_n:
+    st.warning(f"💀 Nightmare 80%+: {', '.join(warn_n)}")
+
+# ================= TABLE =================
+st.subheader("📊 Bảng dữ liệu")
+
+styled_df = st.session_state.df.style.apply(lambda x: highlight_status(st.session_state.df), axis=None)
+
+st.dataframe(styled_df, use_container_width=True)
 
 # ================= SELECT =================
+st.subheader("🎮 Chọn nhân vật")
+
 idx = st.selectbox(
     "Character",
     st.session_state.df.index,
@@ -81,9 +139,17 @@ idx = st.selectbox(
 
 row = st.session_state.df.loc[idx]
 
-energy = st.number_input("Energy", 0, MAX_ENERGY, int(row["energy"]))
-nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"]))
-trial = st.number_input("Trial", 0, 10, int(row["trial"]))
+# ================= INPUT =================
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    energy = st.number_input("Energy", 0, MAX_ENERGY, int(row["energy"]))
+
+with col2:
+    nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"]))
+
+with col3:
+    trial = st.number_input("Trial", 0, 10, int(row["trial"]))
 
 # ================= SAVE =================
 if st.button("💾 Save"):
@@ -93,7 +159,7 @@ if st.button("💾 Save"):
 
     save_row(st.session_state.df.loc[idx])
 
-    st.success("✅ Saved to Supabase!")
+    st.success("✅ Saved!")
     st.rerun()
 
 # ================= GLOBAL =================
@@ -112,7 +178,6 @@ if st.button("⚔️ +2 Nightmare"):
 
     for i in st.session_state.df.index:
         save_row(st.session_state.df.loc[i])
-
     st.rerun()
 
 # ================= ENERGY =================

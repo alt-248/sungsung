@@ -14,11 +14,17 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ================= LOAD =================
+def safe_parse_time(col):
+    parsed = pd.to_datetime(col, errors="coerce", utc=True)
+    now = pd.Timestamp.now(tz=UTC7)
+    parsed = parsed.fillna(now)
+    return parsed.dt.tz_convert(UTC7)
 def load_data():
     res = supabase.table("energy_tracker").select("*").execute()
     df = pd.DataFrame(res.data)
 
-    df["last_update"] = pd.to_datetime(df["last_update"], utc=True).dt.tz_convert(UTC7)
+    #df["last_update"] = pd.to_datetime(df["last_update"], utc=True).dt.tz_convert(UTC7)
+    df["last_update"] = safe_parse_time(df["last_update"])
     return df
 
 # ================= SAVE =================

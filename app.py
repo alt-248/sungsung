@@ -23,20 +23,18 @@ def load_data():
 
 # ================= SAVE =================
 def save_row(row):
+    utc_time = row["last_update"].astimezone(timezone.utc)
+
     supabase.table("energy_tracker").update({
         "energy": int(row["energy"]),
         "nightmare": int(row["nightmare"]),
         "trial": int(row["trial"]),
-        "last_update": row["last_update"].isoformat()
+        "last_update": utc_time.isoformat()
     }).eq("id", int(row["id"])).execute()
 
 # ================= TIME =================
 def get_block_time(dt):
-    if dt.tzinfo is None:
-        dt = dt.tz_localize(UTC7)
-    else:
-        dt = dt.tz_convert(UTC7)
-
+    dt = dt.astimezone(UTC7)
     hour_block = (dt.hour // 3) * 3
     return dt.replace(hour=hour_block, minute=0, second=0, microsecond=0)
 
@@ -48,12 +46,19 @@ def update_energy(df):
     for i in df.index:
         last = df.loc[i, "last_update"]
 
-        diff_hours = int((now_block - last).total_seconds() // 3600)
+        last_block = get_block_time(last)
+
+        diff_hours = int((now_block - last_block).total_seconds() // 3600)
         blocks = diff_hours // 3
 
         if blocks > 0:
-            df.loc[i, "energy"] = min(df.loc[i, "energy"] + blocks * 15, MAX_ENERGY)
-            df.loc[i, "last_update"] = last + pd.Timedelta(hours=blocks * 3)
+            df.loc[i, "energy"] = min(
+                df.loc[i, "energy"] + blocks * 15,
+                MAX_ENERGY
+            )
+
+            # FIX QUAN TRỌNG: luôn snap về block
+            df.loc[i, "last_update"] = last_block + pd.Timedelta(hours=blocks * 3)
 
     return df
 
@@ -95,19 +100,13 @@ if "df" not in st.session_state:
 
 # ================= APP =================
 st.set_page_config(page_title="Energy Tracker PRO", layout="wide")
-st.title("⚡ Energy Tracker PRO (Supabase)")
+st.title("⚡ Energy Tracker PRO (Supabase FIXED)")
 
 # update energy
 st.session_state.df = update_energy(st.session_state.df)
 
 # ================= ALERT =================
 full_e, warn_e, full_n, warn_n = check_alert(st.session_state.df)
-
-if full_e or full_n:
-    st.error("🔥 Có nhân vật FULL!")
-
-if warn_e or warn_n:
-    st.warning("⚠️ Sắp đầy (>=80%)")
 
 if full_e:
     st.error(f"⚡ Full Energy: {', '.join(full_e)}")
@@ -125,12 +124,9 @@ if warn_n:
 st.subheader("📊 Bảng dữ liệu")
 
 styled_df = st.session_state.df.style.apply(lambda x: highlight_status(st.session_state.df), axis=None)
-
 st.dataframe(styled_df, use_container_width=True)
 
 # ================= SELECT =================
-st.subheader("🎮 Chọn nhân vật")
-
 idx = st.selectbox(
     "Character",
     st.session_state.df.index,
@@ -156,6 +152,9 @@ if st.button("💾 Save"):
     st.session_state.df.loc[idx, "energy"] = energy
     st.session_state.df.loc[idx, "nightmare"] = nightmare
     st.session_state.df.loc[idx, "trial"] = trial
+
+    # FIX QUAN TRỌNG: snap time khi save
+    st.session_state.df.loc[idx, "last_update"] = get_block_time(pd.Timestamp.now(tz=UTC7))
 
     save_row(st.session_state.df.loc[idx])
 

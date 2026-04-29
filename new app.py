@@ -242,36 +242,75 @@ if st.button("💾 Save Gear"):
     save_gear(character_name, gear_data)
     st.rerun()
 
+# ===== PREPARE CALC DATA (dùng chung) =====
+calc_df = gear_df.copy()
+
+for col in calc_df.columns:
+    if col != "character":
+        calc_df[col] = pd.to_numeric(calc_df[col], errors="coerce")
 # ================= ALERT GEAR =================
 if not gear_row.empty:
     rowg = gear_row.iloc[0]
 
-    missing = [GEAR_LABELS[c] for c in GEAR_COLUMNS[2:] if pd.isna(rowg.get(c)) or rowg.get(c)==0]
+    missing = [GEAR_LABELS[c] for c in GEAR_COLUMNS[2:]
+               if pd.isna(rowg.get(c)) or rowg.get(c) == 0]
+
     weak = []
 
+    # dùng calc_df để tính giống bảng
     for col in GEAR_COLUMNS[2:]:
-        min_val = gear_df[col].min(skipna=True)
-        if rowg.get(col) == min_val:
-            weak.append(GEAR_LABELS[col])
 
+        if col not in calc_df.columns:
+            continue
+
+        series = calc_df[col].dropna()
+
+        if series.empty:
+            continue
+
+        max_val = series.max()
+        min_val = series.min()
+
+        # tất cả bằng nhau → bỏ
+        if max_val == min_val:
+            continue
+
+        # ===== threshold =====
+        threshold = int(max_val * 0.9)
+
+        weak_candidates = calc_df[col][calc_df[col] < threshold]
+
+        if weak_candidates.empty:
+            continue
+
+        min_weak = weak_candidates.min()
+        min_weak_count = (calc_df[col] == min_weak).sum()
+        total = calc_df[col].count()
+
+        # ===== RULE 60% =====
+        if total > 0 and (min_weak_count / total) < 0.6:
+
+            # nếu nhân vật hiện tại nằm trong nhóm yếu
+            if rowg.get(col) == min_weak:
+                weak.append(GEAR_LABELS[col])
+
+    # ===== UI =====
     if missing:
         st.warning(f"⚠️ Thiếu gear: {', '.join(missing)}")
 
     if weak:
         st.error(f"🔻 Gear yếu: {', '.join(weak)}")
-
-# ================= GEAR TABLE =================
 # ================= GEAR TABLE =================
 st.subheader("📊 Gear Table")
 
 if not gear_df.empty:
 
     # ===== DATA TÍNH TOÁN (GIỮ SỐ) =====
-    calc_df = gear_df.copy()
+    #calc_df = gear_df.copy()
 
-    for col in calc_df.columns:
-        if col != "character":
-            calc_df[col] = pd.to_numeric(calc_df[col], errors="coerce")
+    #for col in calc_df.columns:
+    #    if col != "character":
+    #        calc_df[col] = pd.to_numeric(calc_df[col], errors="coerce")
 
     calc_df["gear_score"] = calc_df.apply(calc_gear_score, axis=1)
 
@@ -321,7 +360,7 @@ def highlight_gear_display(df_calc, df_display):
         threshold = int(max_val * 0.9)
 
         weak_candidates = df_calc[col_key][df_calc[col_key] < threshold]
-
+        
         if not weak_candidates.empty:
             min_weak = weak_candidates.min()
             min_weak_count = (df_calc[col_key] == min_weak).sum()
@@ -329,11 +368,12 @@ def highlight_gear_display(df_calc, df_display):
 
             # rule < 60%
             if total > 0 and (min_weak_count / total) < 0.6:
-
+                
                 for idx in df_display.index:
                     val = df_calc.loc[idx, col_key]
 
                     if pd.notna(val) and val == min_weak:
+                        
                         style.loc[idx, col_label] = "background-color:red;color:white"
 
     return style

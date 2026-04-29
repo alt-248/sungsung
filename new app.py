@@ -433,7 +433,9 @@ if not gear_df.empty:
        df = df.drop(columns=["_val", "_rank"])
 
        return df
-
+    def get_sorted_display(calc_df, display_df, col):
+        sorted_chars = calc_df.sort_values(col, ascending=False)["character"]
+        return display_df.set_index("character").loc[sorted_chars].reset_index()
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -449,14 +451,5 @@ if not gear_df.empty:
     with col3:
         st.write("🛡️ Gear Score")
 
-    # sort bằng số thật
-        sorted_calc = calc_df.sort_values("gear_score", ascending=False)
-
-    # lấy character theo thứ tự đúng
-        sorted_chars = sorted_calc["character"]
-
-    # map sang display_df
-        df_gear = display_df.set_index("character").loc[sorted_chars][["gear_score"]].reset_index()
-
-        #df_gear = get_sorted_display(calc_df, display_df, "gear_score")[["character","gear_score"]]
+        df_gear = get_sorted_display(calc_df, display_df, "gear_score")[["character","gear_score"]]
         st.dataframe(add_rank_icon(df_gear, "gear_score"))

@@ -411,16 +411,28 @@ if not gear_df.empty:
             )
 
     # ===== HÀM THÊM ICON =====
-    def add_rank_icon(df):
-        df = df.reset_index(drop=True)
-        icons = ["🥇", "🥈", "🥉"]
+    def add_rank_icon(df, value_col):
+       df = df.copy()
 
-        df.insert(0, "Top", "")
+    # convert lại về số để rank (do display_df đang là string)
+       df["_val"] = df[value_col].str.replace(",", "").astype(float)
 
-        for i in range(min(3, len(df))):
-            df.loc[i, "Top"] = icons[i]
+    # dense rank (đồng hạng)
+       df["_rank"] = df["_val"].rank(method="dense", ascending=False)
 
-        return df
+    # map icon
+       icon_map = {
+           1: "🥇",
+           2: "🥈",
+           3: "🥉"
+       }
+
+       df.insert(0, "Top", df["_rank"].map(icon_map).fillna(""))
+
+    # cleanup
+       df = df.drop(columns=["_val", "_rank"])
+
+       return df
 
     col1, col2, col3 = st.columns(3)
 

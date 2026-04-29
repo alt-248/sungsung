@@ -438,14 +438,14 @@ if not gear_df.empty:
 
     with col1:
         st.write("⚔️ Lực chiến")
-        df_power = display_df.sort_values("luc_chien", ascending=False)[["character","luc_chien"]]
-        st.dataframe(add_rank_icon(df_power), use_container_width=True)
+        df_power = get_sorted_display(calc_df, display_df, "luc_chien")[["character","luc_chien"]]
+        st.dataframe(add_rank_icon(df_power, "luc_chien"))
+
 
     with col2:
         st.write("💥 DPS")
-        df_dps = display_df.sort_values("dps", ascending=False)[["character","dps"]]
-        st.dataframe(add_rank_icon(df_dps), use_container_width=True)
-
+        df_dps = get_sorted_display(calc_df, display_df, "dps")[["character","dps"]]
+        st.dataframe(add_rank_icon(df_dps, "dps"))
     with col3:
         st.write("🛡️ Gear Score")
 
@@ -458,4 +458,5 @@ if not gear_df.empty:
     # map sang display_df
         df_gear = display_df.set_index("character").loc[sorted_chars][["gear_score"]].reset_index()
 
-        st.dataframe(add_rank_icon(df_gear), use_container_width=True)
+        #df_gear = get_sorted_display(calc_df, display_df, "gear_score")[["character","gear_score"]]
+        st.dataframe(add_rank_icon(df_gear, "gear_score"))

@@ -436,5 +436,14 @@ if not gear_df.empty:
 
     with col3:
         st.write("🛡️ Gear Score")
-        df_gear = display_df.sort_values("gear_score", ascending=False)[["character","gear_score"]]
+
+    # sort bằng số thật
+        sorted_calc = calc_df.sort_values("gear_score", ascending=False)
+
+    # lấy character theo thứ tự đúng
+        sorted_chars = sorted_calc["character"]
+
+    # map sang display_df
+        df_gear = display_df.set_index("character").loc[sorted_chars][["gear_score"]].reset_index()
+
         st.dataframe(add_rank_icon(df_gear), use_container_width=True)

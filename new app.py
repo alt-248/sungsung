@@ -6,6 +6,7 @@ from supabase import create_client
 # ================= CONFIG =================
 MAX_ENERGY = 840
 MAX_NIGHTMARE = 14
+MAX_ENERGYBONUS = 2000
 UTC7 = timezone(timedelta(hours=7))
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -59,7 +60,8 @@ def save_row(row):
         "energy": int(row["energy"]),
         "nightmare": int(row["nightmare"]),
         "trial": int(row["trial"]),
-        "last_update": utc_time.isoformat()
+        "last_update": utc_time.isoformat(),
+        "energy_bonus": int(row["energy_bonus"])
     }).eq("id", int(row["id"])).execute()
 
 # ================= TIME =================
@@ -211,11 +213,12 @@ character_name = row["character"]
 
 # ================= INPUT =================
 energy = st.number_input("Energy", 0, MAX_ENERGY, int(row["energy"]))
+energy_bonus = st.number_input("Energy bonus", 0, MAX_ENERGYBONUS, int(row["energy_bonus"]))
 nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"]))
 trial = st.number_input("Trial", 0, 10, int(row["trial"]))
 
 if st.button("💾 Save"):
-    st.session_state.df.loc[idx, ["energy","nightmare","trial"]] = [energy,nightmare,trial]
+    st.session_state.df.loc[idx, ["energy", "energy_bonus", "nightmare","trial"]] = [energy,energy_bonus,nightmare,trial]
     st.session_state.df.loc[idx, "last_update"] = get_block_time(pd.Timestamp.now(tz=UTC7))
     save_row(st.session_state.df.loc[idx])
     st.rerun()

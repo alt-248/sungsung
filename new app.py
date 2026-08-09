@@ -224,7 +224,7 @@ if st.button("💾 Save"):
     st.rerun()
 
 # ================= GEAR UI =================
-''' st.subheader("🛡️ Gear") 
+""" st.subheader("🛡️ Gear") 
 
 gear_df = load_gear()
 gear_row = gear_df[gear_df["character"] == character_name]
@@ -456,4 +456,4 @@ if not gear_df.empty:
 
         df_gear = get_sorted_display(calc_df, display_df, "gear_score")[["character","gear_score"]]
         st.dataframe(add_rank_icon(df_gear, "gear_score"))
-'''
+"""

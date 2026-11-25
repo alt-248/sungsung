@@ -214,8 +214,8 @@ character_name = row["character"]
 # ================= INPUT =================
 energy = st.number_input("Energy", 0, MAX_ENERGY, int(row["energy"]))
 energy_bonus = st.number_input("Energy bonus", 0, MAX_ENERGYBONUS, int(row["energy_bonus"]))
-nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"]))
-trial = st.number_input("Trial", 0, 10, int(row["trial"]))
+#nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"]))
+#trial = st.number_input("Trial", 0, 10, int(row["trial"]))
 
 if st.button("💾 Save"):
     st.session_state.df.loc[idx, ["energy", "energy_bonus"]] = [energy,energy_bonus]

@@ -218,7 +218,7 @@ nightmare = st.number_input("Nightmare", 0, MAX_NIGHTMARE, int(row["nightmare"])
 trial = st.number_input("Trial", 0, 10, int(row["trial"]))
 
 if st.button("💾 Save"):
-    st.session_state.df.loc[idx, ["energy", "energy_bonus", "nightmare","trial"]] = [energy,energy_bonus,nightmare,trial]
+    st.session_state.df.loc[idx, ["energy", "energy_bonus"]] = [energy,energy_bonus]
     st.session_state.df.loc[idx, "last_update"] = get_block_time(pd.Timestamp.now(tz=UTC7))
     save_row(st.session_state.df.loc[idx])
     st.rerun()

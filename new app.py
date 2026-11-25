@@ -96,12 +96,12 @@ def highlight_energy(df):
             "background-color:yellow" if v >= MAX_ENERGY*0.8 else ""
         )
 
-    #if "nightmare" in df.columns:
-    #    style["nightmare"] = df["nightmare"].apply(
-    #        lambda v: "background-color:red;color:white"
-    #        if v >= MAX_NIGHTMARE else
-    #        "background-color:yellow" if v >= MAX_NIGHTMARE*0.8 else ""
-    #    )
+    if "nightmare" in df.columns:
+        style["nightmare"] = df["nightmare"].apply(
+            lambda v: "background-color:red;color:white"
+            if v >= MAX_NIGHTMARE else
+            "background-color:yellow" if v >= MAX_NIGHTMARE*0.8 else ""
+        )
 
     return style
 # ================= ALERT =================

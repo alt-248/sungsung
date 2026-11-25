@@ -58,8 +58,6 @@ def save_row(row):
 
     supabase.table("energy_tracker").update({
         "energy": int(row["energy"]),
-        "nightmare": int(row["nightmare"]),
-        "trial": int(row["trial"]),
         "last_update": utc_time.isoformat(),
         "energy_bonus": int(row["energy_bonus"])
     }).eq("id", int(row["id"])).execute()
@@ -98,12 +96,12 @@ def highlight_energy(df):
             "background-color:yellow" if v >= MAX_ENERGY*0.8 else ""
         )
 
-    if "nightmare" in df.columns:
-        style["nightmare"] = df["nightmare"].apply(
-            lambda v: "background-color:red;color:white"
-            if v >= MAX_NIGHTMARE else
-            "background-color:yellow" if v >= MAX_NIGHTMARE*0.8 else ""
-        )
+    #if "nightmare" in df.columns:
+    #    style["nightmare"] = df["nightmare"].apply(
+    #        lambda v: "background-color:red;color:white"
+    #        if v >= MAX_NIGHTMARE else
+    #        "background-color:yellow" if v >= MAX_NIGHTMARE*0.8 else ""
+    #    )
 
     return style
 # ================= ALERT =================

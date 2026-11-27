@@ -121,21 +121,21 @@ def auto_system(df):
     today = str(now.date())
 
     # Nightmare
-    if now.hour >= 3 and state["last_nightmare_date"] != today:
-        df["nightmare"] = (df["nightmare"] + 2).clip(upper=MAX_NIGHTMARE)
-        for i in df.index:
-            save_row(df.loc[i])
-        update_system_state({"last_nightmare_date": today})
-        st.success("⚔️ Đã auto +2 Nightmare")
+    #if now.hour >= 3 and state["last_nightmare_date"] != today:
+    #    df["nightmare"] = (df["nightmare"] + 2).clip(upper=MAX_NIGHTMARE)
+    #    for i in df.index:
+    #        save_row(df.loc[i])
+    #    update_system_state({"last_nightmare_date": today})
+    #    st.success("⚔️ Đã auto +2 Nightmare")
 
     # Reset Trial Thứ 4
-    if now.weekday() == 2 and now.hour >= 3:
-        if state["last_trial_reset_date"] != today:
-            df["trial"] = 3
-            for i in df.index:
-                save_row(df.loc[i])
-            update_system_state({"last_trial_reset_date": today})
-            st.warning("🔁 Đã reset Trial")
+    #if now.weekday() == 2 and now.hour >= 3:
+    #    if state["last_trial_reset_date"] != today:
+    #        df["trial"] = 3
+    #        for i in df.index:
+     #           save_row(df.loc[i])
+    #        update_system_state({"last_trial_reset_date": today})
+    #        st.warning("🔁 Đã reset Trial")
 
     return df
 
